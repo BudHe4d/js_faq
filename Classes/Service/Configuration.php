@@ -141,7 +141,7 @@ class Configuration implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param $fieldname
 	 * @return
 	 */
-	public function falImages($result, $tablename = NULL, $fieldname = NULL) {
+	public function falImage($result, $tablename = NULL, $fieldname = NULL) {
 		
 		$where = '';
 
@@ -152,39 +152,38 @@ class Configuration implements \TYPO3\CMS\Core\SingletonInterface {
 			$where .= ' AND fieldname IN ("' . $fieldname . '")';
 		}
 
-		foreach ($result as $key => $value) {
 
-			$whr = ' deleted= 0 and hidden = 0 ' . $where . ' AND uid_foreign = ' . $value['uid'];
+		$whr = ' deleted= 0 and hidden = 0 ' . $where . ' AND uid_foreign = ' . $value['uid'];
 
-			$sysImages = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'sys_file_reference', $whr,'', 'sorting_foreign');
+		$sysImages = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'sys_file_reference', $whr,'', 'sorting_foreign');
 
-			$arr = array();
+		$arr = array();
 
-			foreach ($sysImages as $key1 => $value1) {
+		foreach ($sysImages as $key1 => $value1) {
 
-				$whr1  = 'uid = ' . $value1['uid_local'];
+			$whr1  = 'uid = ' . $value1['uid_local'];
 
-				$sysImageDetail = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'sys_file', $whr1);
+			$sysImageDetail = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'sys_file', $whr1);
 
-				$arr1 = GeneralUtility::trimExplode('/', $sysImageDetail[0]['mime_type'], true);
+			$arr1 = GeneralUtility::trimExplode('/', $sysImageDetail[0]['mime_type'], true);
 
-				$arr[$value1['fieldname']][$value1['uid']] = array(
+			$arr[$value1['fieldname']][$value1['uid']] = array(
 
-					'identifier'	=> 'fileadmin' . $sysImageDetail[0]['identifier'],
-					'title'			=> $value1['title'],
-					'caption'		=> $value1['description'],
-					'extension'		=> $sysImageDetail[0]['extension'],
-					'mime_type'		=> $sysImageDetail[0]['mime_type'],
-					'name'			=> $sysImageDetail[0]['name'],
-					'uid'			=> $sysImageDetail[0]['uid'],
-					'mime'			=> $arr1[0],
-					'type'			=> $arr1[1],
-					'imageName'		=> basename($sysImageDetail[0]['identifier']),
-				);
-			}
-
-			$result[$key]['media'] = $arr;
+				'identifier'	=> 'fileadmin' . $sysImageDetail[0]['identifier'],
+				'title'			=> $value1['title'],
+				'caption'		=> $value1['description'],
+				'extension'		=> $sysImageDetail[0]['extension'],
+				'mime_type'		=> $sysImageDetail[0]['mime_type'],
+				'name'			=> $sysImageDetail[0]['name'],
+				'uid'			=> $sysImageDetail[0]['uid'],
+				'mime'			=> $arr1[0],
+				'type'			=> $arr1[1],
+				'imageName'		=> basename($sysImageDetail[0]['identifier']),
+			);
 		}
+
+		$result[$key]['media'] = $arr;
+		
 		return $result;
 	}
 }
