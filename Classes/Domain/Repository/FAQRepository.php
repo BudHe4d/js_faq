@@ -139,12 +139,27 @@ class FAQRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
 		
 		foreach ($conf as $key => $value) {
 
-			$field1		= 'uid, options, description, image';
+		    // pid and t3ver_state needed 
+		    // see PageRepository::versionOL
+			$field1		= 'uid, options, description, image, pid, t3ver_state';
 			$orderBy1	= ' sorting';
 			$table1		= 'tx_jsfaq_domain_model_content';
-			$where1		= ' deleted = 0 AND hidden = 0 AND faq = \'' . $value['uid'] . '\'';
+			$where1		= ' faq = \'' . $value['uid'] . '\'';
+			$results		= $GLOBALS['TYPO3_DB']->exec_SELECTgetRows($field1, $table1, $where1, '', $orderBy1);
 
-			$answers	= $this->configuration->falImages($GLOBALS['TYPO3_DB']->exec_SELECTgetRows($field1, $table1, $where1, '', $orderBy1), $table1, 'image');
+            		// making the results to an associative array - versionOL needs that
+			$assocArray = [];
+		        foreach ($results as $result) {
+				$assocArray[$value['name']] = $result;
+		    	}
+            		// doing workspace stuff
+           		// see: https://docs.typo3.org/typo3cms/CoreApiReference/ApiOverview/Workspaces/Index.html#frontend-implementation-guidelines
+			foreach ($assocArray as $result){
+				$GLOBALS['TSFE']->sys_page->versionOL($table1,$result);
+				if (is_array($result)) {
+					$answers[]	= $this->configuration->falImage($result, $table1, 'image');
+				}
+			}
 
 			$field2		= 'f.uid, f.question';
 			$orderBy2	= 'm.sorting';
@@ -152,17 +167,18 @@ class FAQRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
 			$where2		= ' uid_local = ' . $value['uid'];
 			
 			$related_faq = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows($field2, $table2, $where2, '', $orderBy2);
-
 			$relatedFaq = array();
-
 			foreach ($related_faq as $key => $val) {
 				$relatedFaq[$val['uid']] = $val;
 			}
-
 			$related_link = GeneralUtility::trimExplode(chr(10), $value['related_link'], true);
-			
 			$data[$value['uid']] = $value;
-			$data[$value['uid']]['answers'] = $answers;
+			
+			// filter too long answers
+			if (count($answers) > 1) {
+			    $data[$value['uid']]['answers'][] = $answers[count($answers)-1];
+			} else $data[$value['uid']]['answers'] = $answers;
+
 			$data[$value['uid']]['related_link'] = $related_link;
 			$data[$value['uid']]['related_faq'] = $relatedFaq;
 		}
