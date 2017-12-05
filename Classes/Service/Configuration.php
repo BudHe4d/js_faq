@@ -152,8 +152,7 @@ class Configuration implements \TYPO3\CMS\Core\SingletonInterface {
 			$where .= ' AND fieldname IN ("' . $fieldname . '")';
 		}
 
-
-		$whr = ' deleted= 0 and hidden = 0 ' . $where . ' AND uid_foreign = ' . $value['uid'];
+		$whr = ' deleted= 0 and hidden = 0 ' . $where . ' AND uid_foreign = ' . $result['uid'];
 
 		$sysImages = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'sys_file_reference', $whr,'', 'sorting_foreign');
 
